@@ -1,0 +1,15 @@
+﻿{
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "FUNCTIONS_WORKER_RUNTIME": "dotnet"
+  },
+  "Google": {
+    "JsonFileName": "<your-json-file-name>",
+    "CalendarId": "<your-calendar-id>"
+  },
+  "Telegram": {
+    "ChatId": 123456789,
+    "BotToken": "<bot-token>"
+  }
+}
