@@ -8,6 +8,7 @@ namespace daily_briefing_telegram_bot.Extensions
     {
         public static void AddConfiguration(this IServiceCollection services)
         {
+#if DEBUG
             var configuration = new ConfigurationBuilder()
                 .SetBasePath(Environment.CurrentDirectory)
                 .AddJsonFile("local.settings.json")
@@ -15,6 +16,7 @@ namespace daily_briefing_telegram_bot.Extensions
                 .Build();
 
             services.AddSingleton<IConfiguration>(configuration);
+#endif
         }
     }
 }
