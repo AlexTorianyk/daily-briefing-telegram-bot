@@ -21,7 +21,7 @@ namespace daily_briefing_telegram_bot
         }
 
         [FunctionName("DailyBriefingScheduled")]
-        public async Task DailyBriefingScheduled([TimerTrigger("0 1 * * *")]TimerInfo myTimer, ExecutionContext context, ILogger log)
+        public async Task DailyBriefingScheduled([TimerTrigger("0 30 2 * * *")]TimerInfo myTimer, ExecutionContext context, ILogger log)
         {
             try
             {
