@@ -6,6 +6,7 @@ using daily_briefing_telegram_bot.Extensions.AutomaticDependencyInjection;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Calendar.v3;
 using Google.Apis.Calendar.v3.Data;
+using Google.Apis.Json;
 using Google.Apis.Services;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Configuration;
@@ -14,13 +15,13 @@ namespace daily_briefing_telegram_bot.Services.Google
 {
     public class GoogleCalendarService : IGoogleCalendarService, IScoped
     {
-        private readonly string jsonFileName;
-        private readonly string calendarId;
+        private readonly string _calendarId;
+        private readonly string _jsonFileName;
 
         public GoogleCalendarService(IConfiguration configuration)
         {
-            jsonFileName = configuration.GetSection("Google").GetValue<string>("JsonFileName");
-            calendarId = configuration.GetSection("Google").GetValue<string>("calendarId");
+            _jsonFileName = configuration.GetSection("Google").GetValue<string>("JsonFileName");
+            _calendarId = configuration.GetSection("Google").GetValue<string>("calendarId");
         }
 
         public async Task<Events> GetEvents(ExecutionContext context)
@@ -34,7 +35,7 @@ namespace daily_briefing_telegram_bot.Services.Google
 
         private EventsResource.ListRequest SetListRequestParameters(CalendarService service)
         {
-            var listRequest = service.Events.List(calendarId);
+            var listRequest = service.Events.List(_calendarId);
             listRequest.TimeMin = DateTime.Now;
             listRequest.ShowDeleted = false;
             listRequest.SingleEvents = true;
@@ -45,23 +46,22 @@ namespace daily_briefing_telegram_bot.Services.Google
 
         private CalendarService GetGoogleCalendarService(ExecutionContext context)
         {
-            var credentials = GetServiceAccountCredentials(Path.Combine(context.FunctionAppDirectory, jsonFileName));
+            var credentials = GetServiceAccountCredentials(Path.Combine(context.FunctionAppDirectory, _jsonFileName));
 
             return new CalendarService(new BaseClientService.Initializer
             {
                 HttpClientInitializer = credentials,
-                ApplicationName = "Daily Briefing",
+                ApplicationName = "Daily Briefing"
             });
         }
 
         private static ServiceAccountCredential GetServiceAccountCredentials(string jsonFilePath)
         {
-
             using (var stream =
                 new FileStream(jsonFilePath, FileMode.Open, FileAccess.Read))
             {
                 var configuration =
-                    global::Google.Apis.Json.NewtonsoftJsonSerializer.Instance
+                    NewtonsoftJsonSerializer.Instance
                         .Deserialize<JsonCredentialParameters>(stream);
                 var credential = new ServiceAccountCredential(
                     new ServiceAccountCredential.Initializer(configuration.ClientEmail)

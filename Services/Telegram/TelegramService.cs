@@ -7,19 +7,19 @@ namespace daily_briefing_telegram_bot.Services.Telegram
 {
     public class TelegramService : ITelegramService, IScoped
     {
-        private readonly long ChatId;
-        private readonly string BotToken;
+        private readonly string _botToken;
+        private readonly long _chatId;
 
         public TelegramService(IConfiguration configuration)
         {
-            ChatId = configuration.GetSection("Telegram").GetValue<int>("ChatId");
-            BotToken = configuration.GetSection("Telegram").GetValue<string>("BotToken");
+            _chatId = configuration.GetSection("Telegram").GetValue<int>("ChatId");
+            _botToken = configuration.GetSection("Telegram").GetValue<string>("BotToken");
         }
 
         public async Task SendMessage(string message)
         {
-            var botClient = new TelegramBotClient(BotToken);
-            await botClient.SendTextMessageAsync(ChatId, message);
+            var botClient = new TelegramBotClient(_botToken);
+            await botClient.SendTextMessageAsync(_chatId, message);
         }
     }
 }
