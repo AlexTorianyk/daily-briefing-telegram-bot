@@ -1,0 +1,18 @@
+version: 2
+updates:
+- package-ecosystem: nuget
+  directory: "/"
+  schedule:
+    interval: daily
+  open-pull-requests-limit: 10
+  ignore:
+  - dependency-name: Google.Apis.Calendar.v3
+    versions:
+    - 1.49.0.2187
+    - 1.49.0.2224
+    - 1.50.0.2224
+    - 1.50.0.2237
+    - 1.51.0.2237
+  - dependency-name: Microsoft.ApplicationInsights
+    versions:
+    - 2.16.0
