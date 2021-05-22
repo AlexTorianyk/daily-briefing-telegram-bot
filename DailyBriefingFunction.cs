@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Logging;
+using Action = daily_briefing_telegram_bot.Models.Action;
 
 namespace daily_briefing_telegram_bot
 {
@@ -112,6 +113,42 @@ namespace daily_briefing_telegram_bot
         private static bool IsMultiDayGoogleEvent(DateTime googleEventEndDate, DateTime googleEventStartDate)
         {
             return (googleEventEndDate - googleEventStartDate).TotalDays > 1;
+        }
+
+        [FunctionName("SendWarningsHttp")]
+        public async Task SendWarningsHttp(
+            [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)]
+            HttpRequest req, ExecutionContext context,
+            ILogger log)
+        {
+            var events = _eventRepository.LoadAll();
+
+            foreach (var @event in events)
+            {
+                if (@event.Action == Action.Warning && @event.LastOccurence.Date == DateTimeOffset.Now.Date)
+                {
+                    await _telegramService.SendMessage(@event.Summary);
+                }
+            }
+        }
+        
+        [FunctionName("DeleteGoogleEventHttp")]
+        public async Task DeleteGoogleEventHttp(
+            [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)]
+            HttpRequest req, ExecutionContext context,
+            ILogger log)
+        {
+            var events = _eventRepository.LoadAll();
+
+            foreach (var @event in events)
+            {
+                if (@event.Action == Action.Delete && !@event.IsDeleted)
+                {
+                    await _googleCalendarService.DeleteEvent(context, @event.Id);
+                    @event.IsDeleted = true;
+                    await _eventRepository.Upsert(@event);
+                }
+            }
         }
     }
 }
