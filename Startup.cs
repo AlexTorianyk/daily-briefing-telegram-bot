@@ -15,6 +15,7 @@ namespace daily_briefing_telegram_bot
         public override void Configure(IFunctionsHostBuilder builder)
         {
             builder.Services.AddDependencies();
+            builder.Services.AddConfiguration();
 #if DEBUG
             var configuration = new ConfigurationBuilder()
                 .SetBasePath(Environment.CurrentDirectory)
