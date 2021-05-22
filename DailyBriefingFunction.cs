@@ -69,16 +69,18 @@ namespace daily_briefing_telegram_bot
                     {
                         var googleEventStartDate = GetGoogleEventStartDate(googleEvent);
                         var googleEventEndDate = GetGoogleEventEndDate(googleEvent);
-                        
+                     
                         if (!GoogleEventHappenedToday(googleEventStartDate, googleEventEndDate)) continue;
                         
                         if (IsMultiDayGoogleEvent(googleEventEndDate, googleEventStartDate)) continue;
 
                         var @event = savedEvents.SingleOrDefault(e => e.Id == googleEvent.Id);
-                                
+
                         if (@event == null)
+                        {
                             await _eventRepository.Upsert(new Event(googleEvent));
-                        else
+                        }
+                        else if (!@event.OccuredOnTheSameDay(googleEventStartDate))
                         {
                             @event.UpdateEvent(googleEvent);
                             await _eventRepository.Upsert(@event);
