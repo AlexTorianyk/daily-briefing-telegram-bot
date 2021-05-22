@@ -11,27 +11,34 @@ namespace daily_briefing_telegram_bot.Models
         public Action Action { get; set; }
         public bool IsDeleted { get; set; }
 
-        public Event(Google.Apis.Calendar.v3.Data.Event @event)
+        public Event(Google.Apis.Calendar.v3.Data.Event @event, bool longMultiDate = false)
         {
             Id = @event.Id;
             Summary = @event.Summary;
-            LastOccurence = DateTimeOffset.Parse(@event.Start.Date);
+            LastOccurence = longMultiDate ? DateTimeOffset.Now.Date : DateTimeOffset.Parse(@event.Start.Date);
             Occurences = 1;
-            Action = Action.None;
+            Action = longMultiDate ? Action.Warning : Action.None;
             IsDeleted = false;
         }
 
-        public void UpdateEvent(Google.Apis.Calendar.v3.Data.Event @event)
+        public void UpdateEvent(Google.Apis.Calendar.v3.Data.Event @event, bool longMultiDate = false)
         {
             Occurences++;
             Summary = @event.Summary;
-            LastOccurence = DateTimeOffset.Parse(@event.Start.Date);
-            Action = Occurences switch
+            LastOccurence = longMultiDate ? DateTimeOffset.Now.Date : DateTimeOffset.Parse(@event.Start.Date);
+            if (longMultiDate)
             {
-                > 2 and < 5 => Action.Warning,
-                >= 5 => Action.Delete,
-                _ => Action
-            };
+                Action = Action.Warning;
+            }
+            else
+            {
+                Action = Occurences switch
+                {
+                    > 2 and < 5 => Action.Warning,
+                    >= 5 => Action.Delete,
+                    _ => Action
+                };
+            }
         }
 
         public bool OccuredOnTheSameDay(DateTimeOffset lastOccurence)

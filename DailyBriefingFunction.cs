@@ -72,18 +72,18 @@ namespace daily_briefing_telegram_bot
                         var googleEventEndDate = GetGoogleEventEndDate(googleEvent);
                      
                         if (!GoogleEventHappenedToday(googleEventStartDate, googleEventEndDate)) continue;
-                        
-                        if (IsMultiDayGoogleEvent(googleEventEndDate, googleEventStartDate)) continue;
 
+                        var isLongMultiDayEvent = (googleEventEndDate - googleEventStartDate).TotalDays > 2;
+                        
                         var @event = savedEvents.SingleOrDefault(e => e.Id == googleEvent.Id);
 
                         if (@event == null)
                         {
-                            await _eventRepository.Upsert(new Event(googleEvent));
+                            await _eventRepository.Upsert(new Event(googleEvent, isLongMultiDayEvent));
                         }
                         else if (!@event.OccuredOnTheSameDay(googleEventStartDate))
                         {
-                            @event.UpdateEvent(googleEvent);
+                            @event.UpdateEvent(googleEvent, isLongMultiDayEvent);
                             await _eventRepository.Upsert(@event);
                         }
                     }
@@ -107,12 +107,12 @@ namespace daily_briefing_telegram_bot
 
         private static bool GoogleEventHappenedToday(DateTime googleEventStartDate, DateTime googleEventEndDate)
         {
-            return googleEventStartDate == DateTime.Now.Date && googleEventEndDate > DateTime.Now.Date;
+            return googleEventStartDate == DateTime.Now.Date || googleEventEndDate == DateTime.Now.Date ;
         }
 
-        private static bool IsMultiDayGoogleEvent(DateTime googleEventEndDate, DateTime googleEventStartDate)
+        private static bool IsLongMultiDayGoogleEvent(DateTime googleEventEndDate, DateTime googleEventStartDate)
         {
-            return (googleEventEndDate - googleEventStartDate).TotalDays > 1;
+            return (googleEventEndDate - googleEventStartDate).TotalDays > 2;
         }
 
         [FunctionName("SendWarningsHttp")]
