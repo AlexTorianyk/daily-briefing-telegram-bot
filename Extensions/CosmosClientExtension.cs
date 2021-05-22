@@ -18,15 +18,16 @@ namespace daily_briefing_telegram_bot.Extensions
                         {PropertyNamingPolicy = CosmosPropertyNamingPolicy.CamelCase}
                 });
 
-            var task = Task.Run(async() =>
+            var task = Task.Run(async () =>
             {
                 var databaseResponse = await cosmosClient.CreateDatabaseIfNotExistsAsync(configuration
                     .GetValue<string>("DatabaseId"));
-                await databaseResponse.Database.CreateContainerIfNotExistsAsync(new ContainerProperties(configuration.GetValue<string>("EventContainer"), "/action"));
+                await databaseResponse.Database.CreateContainerIfNotExistsAsync(
+                    new ContainerProperties(configuration.GetValue<string>("EventContainer"), "/action"));
             });
 
             task.Wait();
-            
+
             services.AddSingleton(cosmosClient);
         }
     }
