@@ -9,6 +9,7 @@ namespace daily_briefing_telegram_bot.Models
         public DateTimeOffset LastOccurence { get; set; }
         public int Occurences { get; set; }
         public Action Action { get; set; }
+        public bool IsDeleted { get; set; }
 
         public Event(Google.Apis.Calendar.v3.Data.Event @event)
         {
@@ -17,6 +18,7 @@ namespace daily_briefing_telegram_bot.Models
             LastOccurence = DateTimeOffset.Parse(@event.Start.Date);
             Occurences = 1;
             Action = Action.None;
+            IsDeleted = false;
         }
 
         public void UpdateEvent(Google.Apis.Calendar.v3.Data.Event @event)
@@ -30,6 +32,11 @@ namespace daily_briefing_telegram_bot.Models
                 >= 5 => Action.Delete,
                 _ => Action
             };
+        }
+
+        public bool OccuredOnTheSameDay(DateTimeOffset lastOccurence)
+        {
+            return LastOccurence == lastOccurence;
         }
         
         public Event()
