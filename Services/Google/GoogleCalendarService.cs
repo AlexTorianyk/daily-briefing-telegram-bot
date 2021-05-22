@@ -74,5 +74,20 @@ namespace daily_briefing_telegram_bot.Services.Google
                 return credential;
             }
         }
+
+        public async Task DeleteEvent(ExecutionContext context, string eventId)
+        {
+            var service = GetGoogleCalendarService(context);
+
+            try
+            {
+                var response = await service.Events.Delete("alex1toryanik@gmail.com", eventId).ExecuteAsync();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
+        }
     }
 }
