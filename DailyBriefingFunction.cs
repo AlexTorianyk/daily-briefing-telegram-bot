@@ -96,17 +96,17 @@ namespace daily_briefing_telegram_bot
 
         private static DateTime GetGoogleEventStartDate(Google.Apis.Calendar.v3.Data.Event googleEvent)
         {
-            return DateTime.Parse(googleEvent.Start.Date).Date;
+            return googleEvent.Start.Date != null ? DateTime.Parse(googleEvent.Start.Date).Date : googleEvent.Start.DateTime.Value.Date;
         }
 
         private static DateTime GetGoogleEventEndDate(Google.Apis.Calendar.v3.Data.Event googleEvent)
         {
-            return DateTime.Parse(googleEvent.End.Date).Date;
+            return googleEvent.End.Date != null ? DateTime.Parse(googleEvent.End.Date).Date : googleEvent.End.DateTime.Value.Date;
         }
 
         private static bool GoogleEventHappenedToday(DateTime googleEventStartDate, DateTime googleEventEndDate)
         {
-            return googleEventStartDate == DateTime.Now.Date || googleEventEndDate > DateTime.Now.Date;
+            return googleEventStartDate == DateTime.Now.Date && googleEventEndDate > DateTime.Now.Date;
         }
 
         private static bool IsMultiDayGoogleEvent(DateTime googleEventEndDate, DateTime googleEventStartDate)
