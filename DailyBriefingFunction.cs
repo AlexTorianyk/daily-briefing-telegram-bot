@@ -34,7 +34,7 @@ namespace daily_briefing_telegram_bot
             try
             {
                 var events = await _googleCalendarService.GetEvents(context);
-                if (events.Items != null && events.Items.Count > 0)
+                if (events.Items is {Count: > 0})
                     foreach (var item in events.Items)
                     {
                         if (string.IsNullOrEmpty(item.Start.Date) || string.IsNullOrEmpty(item.End.Date)) continue;
@@ -66,24 +66,21 @@ namespace daily_briefing_telegram_bot
                 var savedEvents = _eventRepository.LoadAll();
 
                 if (events.Items is {Count: > 0})
-                    foreach (var googleEvent in events.Items)
+                    foreach (var item in events.Items)
                     {
-                        var googleEventStartDate = GetGoogleEventStartDate(googleEvent);
-                        var googleEventEndDate = GetGoogleEventEndDate(googleEvent);
-                     
-                        if (!GoogleEventHappenedToday(googleEventStartDate, googleEventEndDate)) continue;
+                        var googleEvent = new GoogleEvent(item);
 
-                        var isLongMultiDayEvent = (googleEventEndDate - googleEventStartDate).TotalDays > 2;
-                        
-                        var @event = savedEvents.SingleOrDefault(e => e.Id == googleEvent.Id);
+                        if (!googleEvent.HappenedToday()) continue;
+
+                        var @event = savedEvents.SingleOrDefault(e => e.Id == item.Id);
 
                         if (@event == null)
                         {
-                            await _eventRepository.Upsert(new Event(googleEvent, isLongMultiDayEvent));
+                            await _eventRepository.Upsert(new Models.Event(googleEvent));
                         }
-                        else if (!@event.OccuredOnTheSameDay(googleEventStartDate))
+                        else if (!@event.OccuredOn(googleEvent.StartDate))
                         {
-                            @event.UpdateEvent(googleEvent, isLongMultiDayEvent);
+                            @event.UpdateEvent(googleEvent);
                             await _eventRepository.Upsert(@event);
                         }
                     }
@@ -95,26 +92,6 @@ namespace daily_briefing_telegram_bot
             }
         }
 
-        private static DateTime GetGoogleEventStartDate(Google.Apis.Calendar.v3.Data.Event googleEvent)
-        {
-            return googleEvent.Start.Date != null ? DateTime.Parse(googleEvent.Start.Date).Date : googleEvent.Start.DateTime.Value.Date;
-        }
-
-        private static DateTime GetGoogleEventEndDate(Google.Apis.Calendar.v3.Data.Event googleEvent)
-        {
-            return googleEvent.End.Date != null ? DateTime.Parse(googleEvent.End.Date).Date : googleEvent.End.DateTime.Value.Date;
-        }
-
-        private static bool GoogleEventHappenedToday(DateTime googleEventStartDate, DateTime googleEventEndDate)
-        {
-            return googleEventStartDate == DateTime.Now.Date || googleEventEndDate == DateTime.Now.Date ;
-        }
-
-        private static bool IsLongMultiDayGoogleEvent(DateTime googleEventEndDate, DateTime googleEventStartDate)
-        {
-            return (googleEventEndDate - googleEventStartDate).TotalDays > 2;
-        }
-
         [FunctionName("SendWarningsHttp")]
         public async Task SendWarningsHttp(
             [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)]
@@ -124,14 +101,10 @@ namespace daily_briefing_telegram_bot
             var events = _eventRepository.LoadAll();
 
             foreach (var @event in events)
-            {
                 if (@event.Action == Action.Warning && @event.LastOccurence.Date == DateTimeOffset.Now.Date)
-                {
                     await _telegramService.SendMessage(@event.Summary);
-                }
-            }
         }
-        
+
         [FunctionName("DeleteGoogleEventHttp")]
         public async Task DeleteGoogleEventHttp(
             [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)]
@@ -141,14 +114,12 @@ namespace daily_briefing_telegram_bot
             var events = _eventRepository.LoadAll();
 
             foreach (var @event in events)
-            {
                 if (@event.Action == Action.Delete && !@event.IsDeleted)
                 {
                     await _googleCalendarService.DeleteEvent(context, @event.Id);
                     @event.IsDeleted = true;
                     await _eventRepository.Upsert(@event);
                 }
-            }
         }
     }
 }

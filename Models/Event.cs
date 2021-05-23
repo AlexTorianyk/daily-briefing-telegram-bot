@@ -11,43 +11,39 @@ namespace daily_briefing_telegram_bot.Models
         public Action Action { get; set; }
         public bool IsDeleted { get; set; }
 
-        public Event(Google.Apis.Calendar.v3.Data.Event @event, bool longMultiDate = false)
+        public Event(GoogleEvent googleEvent)
         {
-            Id = @event.Id;
-            Summary = @event.Summary;
-            LastOccurence = longMultiDate ? DateTimeOffset.Now.Date : DateTimeOffset.Parse(@event.Start.Date);
+            Id = googleEvent.Id;
+            Summary = googleEvent.Summary;
+            LastOccurence = googleEvent.IsLongMultiDayEvent ? DateTimeOffset.Now.Date : googleEvent.StartDate;
             Occurences = 1;
-            Action = longMultiDate ? Action.Warning : Action.None;
+            Action = googleEvent.IsLongMultiDayEvent ? Action.Warning : Action.None;
             IsDeleted = false;
         }
 
-        public void UpdateEvent(Google.Apis.Calendar.v3.Data.Event @event, bool longMultiDate = false)
+        public Event()
+        {
+        }
+
+        public void UpdateEvent(GoogleEvent googleEvent)
         {
             Occurences++;
-            Summary = @event.Summary;
-            LastOccurence = longMultiDate ? DateTimeOffset.Now.Date : DateTimeOffset.Parse(@event.Start.Date);
-            if (longMultiDate)
-            {
+            Summary = googleEvent.Summary;
+            LastOccurence = googleEvent.IsLongMultiDayEvent ? DateTimeOffset.Now.Date : googleEvent.StartDate;
+            if (googleEvent.IsLongMultiDayEvent)
                 Action = Action.Warning;
-            }
             else
-            {
                 Action = Occurences switch
                 {
                     > 2 and < 5 => Action.Warning,
                     >= 5 => Action.Delete,
                     _ => Action
                 };
-            }
         }
 
-        public bool OccuredOnTheSameDay(DateTimeOffset lastOccurence)
+        public bool OccuredOn(DateTimeOffset date)
         {
-            return LastOccurence == lastOccurence;
-        }
-        
-        public Event()
-        {
+            return LastOccurence == date;
         }
     }
 }
