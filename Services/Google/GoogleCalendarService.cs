@@ -17,11 +17,13 @@ namespace daily_briefing_telegram_bot.Services.Google
     {
         private readonly string _calendarId;
         private readonly string _jsonFileName;
+        private readonly string _applicationName;
 
         public GoogleCalendarService(IConfiguration configuration)
         {
             _jsonFileName = configuration.GetSection("Google").GetValue<string>("JsonFileName");
-            _calendarId = configuration.GetSection("Google").GetValue<string>("calendarId");
+            _calendarId = configuration.GetSection("Google").GetValue<string>("CalendarId");
+            _applicationName = configuration.GetSection("Google").GetValue<string>("ApplicationName");
         }
 
         public async Task<Events> GetEvents(ExecutionContext context)
@@ -37,15 +39,7 @@ namespace daily_briefing_telegram_bot.Services.Google
         {
             var service = GetGoogleCalendarService(context);
 
-            try
-            {
-                var response = await service.Events.Delete("alex1toryanik@gmail.com", eventId).ExecuteAsync();
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-                throw;
-            }
+            await service.Events.Delete(_calendarId, eventId).ExecuteAsync();
         }
 
         private EventsResource.ListRequest SetListRequestParameters(CalendarService service)
@@ -56,6 +50,7 @@ namespace daily_briefing_telegram_bot.Services.Google
             listRequest.SingleEvents = true;
             listRequest.MaxResults = 100;
             listRequest.OrderBy = EventsResource.ListRequest.OrderByEnum.StartTime;
+            
             return listRequest;
         }
 
@@ -66,28 +61,27 @@ namespace daily_briefing_telegram_bot.Services.Google
             return new CalendarService(new BaseClientService.Initializer
             {
                 HttpClientInitializer = credentials,
-                ApplicationName = "Daily Briefing"
+                ApplicationName = _applicationName
             });
         }
 
         private static ServiceAccountCredential GetServiceAccountCredentials(string jsonFilePath)
         {
-            using (var stream =
-                new FileStream(jsonFilePath, FileMode.Open, FileAccess.Read))
-            {
-                var configuration =
-                    NewtonsoftJsonSerializer.Instance
-                        .Deserialize<JsonCredentialParameters>(stream);
-                var credential = new ServiceAccountCredential(
-                    new ServiceAccountCredential.Initializer(configuration.ClientEmail)
+            using var stream =
+                new FileStream(jsonFilePath, FileMode.Open, FileAccess.Read);
+            
+            var configuration =
+                NewtonsoftJsonSerializer.Instance
+                    .Deserialize<JsonCredentialParameters>(stream);
+            
+            return new ServiceAccountCredential(
+                new ServiceAccountCredential.Initializer(configuration.ClientEmail)
+                {
+                    Scopes = new List<string>
                     {
-                        Scopes = new List<string>
-                        {
-                            CalendarService.Scope.Calendar
-                        }
-                    }.FromPrivateKey(configuration.PrivateKey));
-                return credential;
-            }
+                        CalendarService.Scope.Calendar
+                    }
+                }.FromPrivateKey(configuration.PrivateKey));
         }
     }
 }
