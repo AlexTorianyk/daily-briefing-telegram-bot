@@ -27,8 +27,8 @@ namespace daily_briefing_telegram_bot
             _eventRepository = eventRepository;
         }
 
-        [FunctionName("DailyBriefingScheduled")]
-        public async Task DailyBriefingScheduled([TimerTrigger("0 30 2 * * *")] TimerInfo myTimer,
+        [FunctionName("PersistEventsScheduled")]
+        public async Task DailyBriefingScheduled([TimerTrigger("0 30 20 * * *")] TimerInfo myTimer,
             ExecutionContext context, ILogger log)
         {
             try
@@ -54,7 +54,7 @@ namespace daily_briefing_telegram_bot
             }
         }
 
-        [FunctionName("DailyBriefingHttp")]
+        [FunctionName("PersistEventsHttp")]
         public async Task DailyBriefingHttp(
             [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)]
             HttpRequest req, ExecutionContext context,
@@ -110,6 +110,23 @@ namespace daily_briefing_telegram_bot
                 }
         }
 
+        [FunctionName("SendWarningsScheduled")]
+        public async Task SendWarningsScheduled(
+            [TimerTrigger("0 30 21 * * *")] TimerInfo myTimer, ExecutionContext context,
+            ILogger log)
+        {
+            var events = _eventRepository.LoadAll();
+
+            foreach (var @event in events)
+                if (@event.Action == Action.Warning)
+                {
+                    await _telegramService.SendMessage(@event.Summary);
+
+                    @event.ResetAction();
+                    await _eventRepository.Upsert(@event);
+                }
+        }
+
         [FunctionName("DeleteGoogleEventHttp")]
         public async Task DeleteGoogleEventHttp(
             [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)]
@@ -122,7 +139,24 @@ namespace daily_briefing_telegram_bot
                 if (@event.Action == Action.Delete)
                 {
                     await _googleCalendarService.DeleteEvent(context, @event.Id);
-                    
+
+                    @event.ResetAction();
+                    await _eventRepository.Upsert(@event);
+                }
+        }
+
+        [FunctionName("DeleteGoogleEventScheduled")]
+        public async Task DeleteGoogleEventScheduled(
+            [TimerTrigger("0 30 21 * * *")] TimerInfo myTimer, ExecutionContext context,
+            ILogger log)
+        {
+            var events = _eventRepository.LoadAll();
+
+            foreach (var @event in events)
+                if (@event.Action == Action.Delete)
+                {
+                    await _googleCalendarService.DeleteEvent(context, @event.Id);
+
                     @event.ResetAction();
                     await _eventRepository.Upsert(@event);
                 }

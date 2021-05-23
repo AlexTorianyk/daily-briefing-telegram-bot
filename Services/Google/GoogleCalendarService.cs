@@ -15,9 +15,9 @@ namespace daily_briefing_telegram_bot.Services.Google
 {
     public class GoogleCalendarService : IGoogleCalendarService, IScoped
     {
+        private readonly string _applicationName;
         private readonly string _calendarId;
         private readonly string _jsonFileName;
-        private readonly string _applicationName;
 
         public GoogleCalendarService(IConfiguration configuration)
         {
@@ -50,7 +50,7 @@ namespace daily_briefing_telegram_bot.Services.Google
             listRequest.SingleEvents = true;
             listRequest.MaxResults = 100;
             listRequest.OrderBy = EventsResource.ListRequest.OrderByEnum.StartTime;
-            
+
             return listRequest;
         }
 
@@ -69,11 +69,11 @@ namespace daily_briefing_telegram_bot.Services.Google
         {
             using var stream =
                 new FileStream(jsonFilePath, FileMode.Open, FileAccess.Read);
-            
+
             var configuration =
                 NewtonsoftJsonSerializer.Instance
                     .Deserialize<JsonCredentialParameters>(stream);
-            
+
             return new ServiceAccountCredential(
                 new ServiceAccountCredential.Initializer(configuration.ClientEmail)
                 {
