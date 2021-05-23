@@ -15,36 +15,34 @@ namespace daily_briefing_telegram_bot.Services.Google
 {
     public class GoogleCalendarService : IGoogleCalendarService, IScoped
     {
-        private readonly string _calendarId;
         private readonly string _jsonFileName;
         private readonly string _applicationName;
 
         public GoogleCalendarService(IConfiguration configuration)
         {
             _jsonFileName = configuration.GetSection("Google").GetValue<string>("JsonFileName");
-            _calendarId = configuration.GetSection("Google").GetValue<string>("CalendarId");
             _applicationName = configuration.GetSection("Google").GetValue<string>("ApplicationName");
         }
 
-        public async Task<Events> GetEvents(ExecutionContext context)
+        public async Task<Events> GetEvents(ExecutionContext context, string calendarId = "primary")
         {
             var service = GetGoogleCalendarService(context);
 
-            var listRequest = SetListRequestParameters(service);
+            var listRequest = SetListRequestParameters(service, calendarId);
 
             return await listRequest.ExecuteAsync();
         }
 
-        public async Task DeleteEvent(ExecutionContext context, string eventId)
+        public async Task DeleteEvent(ExecutionContext context, string eventId, string calendarId = "primary")
         {
             var service = GetGoogleCalendarService(context);
 
-            await service.Events.Delete(_calendarId, eventId).ExecuteAsync();
+            await service.Events.Delete(calendarId, eventId).ExecuteAsync();
         }
 
-        private EventsResource.ListRequest SetListRequestParameters(CalendarService service)
+        private static EventsResource.ListRequest SetListRequestParameters(CalendarService service, string calendarId)
         {
-            var listRequest = service.Events.List(_calendarId);
+            var listRequest = service.Events.List(calendarId);
             listRequest.TimeMin = DateTime.Now;
             listRequest.ShowDeleted = false;
             listRequest.SingleEvents = true;
