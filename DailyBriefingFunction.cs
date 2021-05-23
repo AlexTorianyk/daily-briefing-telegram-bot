@@ -62,13 +62,16 @@ namespace daily_briefing_telegram_bot
         {
             try
             {
-                var events = await _googleCalendarService.GetEvents(context);
-                var savedEvents = _eventRepository.LoadAll();
+                foreach (var calendarId in _googleCalendarService.GetCalendarIds())
+                {
+                    var events = await _googleCalendarService.GetEvents(context, calendarId);
+                    var savedEvents = _eventRepository.LoadAll();
 
-                if (events.Items is {Count: > 0})
+                    if (events.Items is not {Count: > 0}) continue;
+                    
                     foreach (var item in events.Items)
                     {
-                        var googleEvent = new GoogleEvent(item);
+                        var googleEvent = new GoogleEvent(item, calendarId);
 
                         if (!googleEvent.HappenedToday()) continue;
 
@@ -84,6 +87,7 @@ namespace daily_briefing_telegram_bot
                             await _eventRepository.Upsert(@event);
                         }
                     }
+                }
             }
             catch (Exception e)
             {
@@ -118,14 +122,19 @@ namespace daily_briefing_telegram_bot
         {
             var events = _eventRepository.LoadAll();
 
-            foreach (var @event in events)
-                if (@event.Action == Action.Delete)
-                {
-                    await _googleCalendarService.DeleteEvent(context, @event.Id);
+            foreach (var calendarId in _googleCalendarService.GetCalendarIds())
+            {
+                foreach (var @event in events)
+                    if (@event.Action == Action.Delete && @event.CalendarId == calendarId)
+                    {
+                        await _googleCalendarService.DeleteEvent(context, @event.Id, calendarId);
                     
-                    @event.ResetAction();
-                    await _eventRepository.Upsert(@event);
-                }
+                        @event.ResetAction();
+                        await _eventRepository.Upsert(@event);
+                    }
+            }
+            
+            
         }
     }
 }
