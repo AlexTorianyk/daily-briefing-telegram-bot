@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Threading.Tasks;
 using daily_briefing_telegram_bot.Extensions.AutomaticDependencyInjection;
@@ -17,11 +18,23 @@ namespace daily_briefing_telegram_bot.Services.Google
     {
         private readonly string _jsonFileName;
         private readonly string _applicationName;
+        private readonly IEnumerable<string> _calendarIds;
 
         public GoogleCalendarService(IConfiguration configuration)
         {
             _jsonFileName = configuration.GetSection("Google").GetValue<string>("JsonFileName");
             _applicationName = configuration.GetSection("Google").GetValue<string>("ApplicationName");
+            _calendarIds = InitializeCalendarIds(configuration);
+        }
+
+        private static IEnumerable<string> InitializeCalendarIds(IConfiguration configuration)
+        {
+            var primaryCalendarId = configuration.GetSection("Google").GetSection("Calendars")
+                .GetValue<string>("Primary");
+            var workCalendarId = configuration.GetSection("Google").GetSection("Calendars")
+                .GetValue<string>("Work");
+            
+            return new Collection<string> {primaryCalendarId, workCalendarId};
         }
 
         public async Task<Events> GetEvents(ExecutionContext context, string calendarId = "primary")
@@ -80,6 +93,11 @@ namespace daily_briefing_telegram_bot.Services.Google
                         CalendarService.Scope.Calendar
                     }
                 }.FromPrivateKey(configuration.PrivateKey));
+        }
+
+        public IEnumerable<string> GetCalendarIds()
+        {
+            return _calendarIds;
         }
     }
 }
