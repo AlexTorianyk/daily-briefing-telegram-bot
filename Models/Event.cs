@@ -9,7 +9,6 @@ namespace daily_briefing_telegram_bot.Models
         public DateTimeOffset LastOccurence { get; set; }
         public int Occurences { get; set; }
         public Action Action { get; set; }
-        public bool IsDeleted { get; set; }
 
         public Event(GoogleEvent googleEvent)
         {
@@ -18,11 +17,6 @@ namespace daily_briefing_telegram_bot.Models
             LastOccurence = googleEvent.IsLongMultiDayEvent ? DateTimeOffset.Now.Date : googleEvent.StartDate;
             Occurences = 1;
             Action = googleEvent.IsLongMultiDayEvent ? Action.Warning : Action.None;
-            IsDeleted = false;
-        }
-
-        public Event()
-        {
         }
 
         public void UpdateEvent(GoogleEvent googleEvent)
@@ -44,6 +38,15 @@ namespace daily_briefing_telegram_bot.Models
         public bool OccuredOn(DateTimeOffset date)
         {
             return LastOccurence == date;
+        }
+
+        public void ResetAction()
+        {
+            Action = Action.None;
+        }
+
+        public Event()
+        {
         }
     }
 }

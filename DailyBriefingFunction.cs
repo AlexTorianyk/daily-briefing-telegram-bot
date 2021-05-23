@@ -76,7 +76,7 @@ namespace daily_briefing_telegram_bot
 
                         if (@event == null)
                         {
-                            await _eventRepository.Upsert(new Models.Event(googleEvent));
+                            await _eventRepository.Upsert(new Event(googleEvent));
                         }
                         else if (!@event.OccuredOn(googleEvent.StartDate))
                         {
@@ -101,8 +101,13 @@ namespace daily_briefing_telegram_bot
             var events = _eventRepository.LoadAll();
 
             foreach (var @event in events)
-                if (@event.Action == Action.Warning && @event.LastOccurence.Date == DateTimeOffset.Now.Date)
+                if (@event.Action == Action.Warning)
+                {
                     await _telegramService.SendMessage(@event.Summary);
+
+                    @event.ResetAction();
+                    await _eventRepository.Upsert(@event);
+                }
         }
 
         [FunctionName("DeleteGoogleEventHttp")]
@@ -114,10 +119,11 @@ namespace daily_briefing_telegram_bot
             var events = _eventRepository.LoadAll();
 
             foreach (var @event in events)
-                if (@event.Action == Action.Delete && !@event.IsDeleted)
+                if (@event.Action == Action.Delete)
                 {
                     await _googleCalendarService.DeleteEvent(context, @event.Id);
-                    @event.IsDeleted = true;
+                    
+                    @event.ResetAction();
                     await _eventRepository.Upsert(@event);
                 }
         }
