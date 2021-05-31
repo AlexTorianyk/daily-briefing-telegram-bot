@@ -28,7 +28,7 @@ namespace daily_briefing_telegram_bot
         }
 
         [FunctionName("PersistEventsScheduled")]
-        public async Task DailyBriefingScheduled([TimerTrigger("0 30 20 * * *")] TimerInfo myTimer,
+        public async Task PersistEventsScheduled([TimerTrigger("0 30 20 * * *")] TimerInfo myTimer,
             ExecutionContext context, ILogger log)
         {
             try
@@ -55,7 +55,7 @@ namespace daily_briefing_telegram_bot
         }
 
         [FunctionName("PersistEventsHttp")]
-        public async Task DailyBriefingHttp(
+        public async Task PersistEventsHttp(
             [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)]
             HttpRequest req, ExecutionContext context,
             ILogger log)
@@ -87,7 +87,7 @@ namespace daily_briefing_telegram_bot
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                log.LogError(e, e.Message);
                 throw;
             }
         }
@@ -98,16 +98,24 @@ namespace daily_briefing_telegram_bot
             HttpRequest req, ExecutionContext context,
             ILogger log)
         {
-            var events = _eventRepository.LoadAll();
+            try
+            {
+                var events = _eventRepository.LoadAll();
 
-            foreach (var @event in events)
-                if (@event.Action == Action.Warning)
-                {
-                    await _telegramService.SendMessage(@event.Summary);
+                foreach (var @event in events)
+                    if (@event.Action == Action.Warning)
+                    {
+                        await _telegramService.SendMessage(@event.Summary);
 
-                    @event.ResetAction();
-                    await _eventRepository.Upsert(@event);
-                }
+                        @event.ResetAction();
+                        await _eventRepository.Upsert(@event);
+                    }
+            }
+            catch (Exception e)
+            {
+                log.LogError(e, e.Message);
+                throw;
+            }
         }
 
         [FunctionName("SendWarningsScheduled")]
@@ -115,16 +123,24 @@ namespace daily_briefing_telegram_bot
             [TimerTrigger("0 30 21 * * *")] TimerInfo myTimer, ExecutionContext context,
             ILogger log)
         {
-            var events = _eventRepository.LoadAll();
+            try
+            {
+                var events = _eventRepository.LoadAll();
 
-            foreach (var @event in events)
-                if (@event.Action == Action.Warning)
-                {
-                    await _telegramService.SendMessage(@event.Summary);
+                foreach (var @event in events)
+                    if (@event.Action == Action.Warning)
+                    {
+                        await _telegramService.SendMessage(@event.Summary);
 
-                    @event.ResetAction();
-                    await _eventRepository.Upsert(@event);
-                }
+                        @event.ResetAction();
+                        await _eventRepository.Upsert(@event);
+                    }
+            }
+            catch (Exception e)
+            {
+                log.LogError(e, e.Message);
+                throw;
+            }
         }
 
         [FunctionName("DeleteGoogleEventHttp")]
@@ -133,16 +149,24 @@ namespace daily_briefing_telegram_bot
             HttpRequest req, ExecutionContext context,
             ILogger log)
         {
-            var events = _eventRepository.LoadAll();
+            try
+            {
+                var events = _eventRepository.LoadAll();
 
-            foreach (var @event in events)
-                if (@event.Action == Action.Delete)
-                {
-                    await _googleCalendarService.DeleteEvent(context, @event.Id);
+                foreach (var @event in events)
+                    if (@event.Action == Action.Delete)
+                    {
+                        await _googleCalendarService.DeleteEvent(context, @event.Id);
 
-                    @event.ResetAction();
-                    await _eventRepository.Upsert(@event);
-                }
+                        @event.ResetAction();
+                        await _eventRepository.Upsert(@event);
+                    }
+            }
+            catch (Exception e)
+            {
+                log.LogError(e, e.Message);
+                throw;
+            }
         }
 
         [FunctionName("DeleteGoogleEventScheduled")]
@@ -150,16 +174,24 @@ namespace daily_briefing_telegram_bot
             [TimerTrigger("0 30 21 * * *")] TimerInfo myTimer, ExecutionContext context,
             ILogger log)
         {
-            var events = _eventRepository.LoadAll();
+            try
+            {
+                var events = _eventRepository.LoadAll();
 
-            foreach (var @event in events)
-                if (@event.Action == Action.Delete)
-                {
-                    await _googleCalendarService.DeleteEvent(context, @event.Id);
+                foreach (var @event in events)
+                    if (@event.Action == Action.Delete)
+                    {
+                        await _googleCalendarService.DeleteEvent(context, @event.Id);
 
-                    @event.ResetAction();
-                    await _eventRepository.Upsert(@event);
-                }
+                        @event.ResetAction();
+                        await _eventRepository.Upsert(@event);
+                    }
+            }
+            catch (Exception e)
+            {
+                log.LogError(e, e.Message);
+                throw;
+            }
         }
     }
 }

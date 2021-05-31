@@ -1,5 +1,4 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using daily_briefing_telegram_bot;
 using daily_briefing_telegram_bot.Extensions;
 using daily_briefing_telegram_bot.Extensions.AutomaticDependencyInjection;
@@ -19,14 +18,15 @@ namespace daily_briefing_telegram_bot
             builder.Services.AddConfiguration(configuration);
             builder.Services.AddComsosClient(configuration.GetSection("CosmosDb"));
         }
-        
+
         public override void ConfigureAppConfiguration(IFunctionsConfigurationBuilder builder)
         {
             var context = builder.GetContext();
 
             builder.ConfigurationBuilder
                 .AddJsonFile(Path.Combine(context.ApplicationRootPath, "appsettings.json"), true, false)
-                .AddJsonFile(Path.Combine(context.ApplicationRootPath, $"appsettings.{context.EnvironmentName}.json"), true, false)
+                .AddJsonFile(Path.Combine(context.ApplicationRootPath, $"appsettings.{context.EnvironmentName}.json"),
+                    true, false)
                 .AddJsonFile(Path.Combine(context.ApplicationRootPath, "local.settings.json"), true, false)
                 .AddEnvironmentVariables();
         }

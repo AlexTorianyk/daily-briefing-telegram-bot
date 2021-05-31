@@ -19,6 +19,10 @@ namespace daily_briefing_telegram_bot.Models
             Action = googleEvent.IsLongMultiDayEvent ? Action.Warning : Action.None;
         }
 
+        public Event()
+        {
+        }
+
         public void UpdateEvent(GoogleEvent googleEvent)
         {
             Occurences++;
@@ -43,10 +47,6 @@ namespace daily_briefing_telegram_bot.Models
         public void ResetAction()
         {
             Action = Action.None;
-        }
-
-        public Event()
-        {
         }
     }
 }
