@@ -6,17 +6,9 @@ namespace daily_briefing_telegram_bot.Extensions
 {
     public static class ConfigurationExtension
     {
-        public static void AddConfiguration(this IServiceCollection services)
+        public static void AddConfiguration(this IServiceCollection services, IConfiguration configuration)
         {
-#if DEBUG
-            var configuration = new ConfigurationBuilder()
-                .SetBasePath(Environment.CurrentDirectory)
-                .AddJsonFile("local.settings.json")
-                .AddEnvironmentVariables()
-                .Build();
-
-            services.AddSingleton<IConfiguration>(configuration);
-#endif
+            services.AddSingleton(configuration);
         }
     }
 }
