@@ -154,11 +154,13 @@ namespace daily_briefing_telegram_bot
                 var events = _eventRepository.LoadAll();
 
                 foreach (var @event in events)
-                    if (@event.Action == Action.Delete)
+                    if (@event.Action == Action.Delete && !@event.IsDeleted)
                     {
                         await _googleCalendarService.DeleteEvent(context, @event.Id);
 
                         @event.ResetAction();
+                        @event.Delete();
+
                         await _eventRepository.Upsert(@event);
                     }
             }
@@ -179,11 +181,13 @@ namespace daily_briefing_telegram_bot
                 var events = _eventRepository.LoadAll();
 
                 foreach (var @event in events)
-                    if (@event.Action == Action.Delete)
+                    if (@event.Action == Action.Delete && !@event.IsDeleted)
                     {
                         await _googleCalendarService.DeleteEvent(context, @event.Id);
 
                         @event.ResetAction();
+                        @event.Delete();
+                        
                         await _eventRepository.Upsert(@event);
                     }
             }

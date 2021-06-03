@@ -9,6 +9,7 @@ namespace daily_briefing_telegram_bot.Models
         public DateTimeOffset LastOccurence { get; set; }
         public int Occurences { get; set; }
         public Action Action { get; set; }
+        public bool IsDeleted { get; set; }
 
         public Event(GoogleEvent googleEvent)
         {
@@ -47,6 +48,11 @@ namespace daily_briefing_telegram_bot.Models
         public void ResetAction()
         {
             Action = Action.None;
+        }
+
+        public void Delete()
+        {
+            IsDeleted = true;
         }
     }
 }
