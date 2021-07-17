@@ -45,14 +45,14 @@ namespace daily_briefing_telegram_bot.Models
             return LastOccurence == date;
         }
 
-        public void ResetAction()
-        {
-            Action = Action.None;
-        }
-
         public void Delete()
         {
             IsDeleted = true;
+        }
+
+        public bool HappenedToday()
+        {
+            return LastOccurence == DateTimeOffset.Now.Date;
         }
     }
 }

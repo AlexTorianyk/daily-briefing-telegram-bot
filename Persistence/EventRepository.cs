@@ -27,5 +27,10 @@ namespace daily_briefing_telegram_bot.Persistence
         {
             return _container.GetItemLinqQueryable<Event>(true).ToList();
         }
+
+        public async Task Replace(Event @event)
+        {
+            await _container.ReplaceItemAsync(@event, @event.Id);
+        }
     }
 }

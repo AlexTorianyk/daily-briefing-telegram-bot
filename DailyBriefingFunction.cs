@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using daily_briefing_telegram_bot.Models;
 using daily_briefing_telegram_bot.Persistence;
+using daily_briefing_telegram_bot.Services;
 using daily_briefing_telegram_bot.Services.Google;
 using daily_briefing_telegram_bot.Services.Telegram;
 using Microsoft.AspNetCore.Http;
@@ -15,37 +16,20 @@ namespace daily_briefing_telegram_bot
 {
     public class DailyBriefingFunction
     {
-        private readonly EventRepository _eventRepository;
-        private readonly IGoogleCalendarService _googleCalendarService;
-        private readonly ITelegramService _telegramService;
+        private readonly FunctionHelperService _functionHelperService;
 
-        public DailyBriefingFunction(IGoogleCalendarService googleCalendarService, ITelegramService telegramService,
-            EventRepository eventRepository)
+        public DailyBriefingFunction(FunctionHelperService functionHelperService)
         {
-            _googleCalendarService = googleCalendarService;
-            _telegramService = telegramService;
-            _eventRepository = eventRepository;
+            _functionHelperService = functionHelperService;
         }
 
-        [FunctionName("PersistEventsScheduled")]
-        public async Task PersistEventsScheduled([TimerTrigger("0 30 20 * * *")] TimerInfo myTimer,
+        [FunctionName("PersistCalendarEventsScheduled")]
+        public async Task PersistCalendarEventsScheduled([TimerTrigger("0 30 20 * * *")] TimerInfo myTimer,
             ExecutionContext context, ILogger log)
         {
             try
             {
-                var events = await _googleCalendarService.GetEvents(context);
-                if (events.Items is {Count: > 0})
-                    foreach (var item in events.Items)
-                    {
-                        if (string.IsNullOrEmpty(item.Start.Date) || string.IsNullOrEmpty(item.End.Date)) continue;
-                        var itemStartDate = DateTime.Parse(item.Start.Date).Date;
-                        var itemEndDate = DateTime.Parse(item.End.Date).Date;
-                        var today = DateTime.Now.Date;
-
-                        if (itemStartDate <= today && itemEndDate > today)
-                            if (!string.IsNullOrEmpty(item.Summary))
-                                await _telegramService.SendMessage(item.Summary);
-                    }
+                await _functionHelperService.PersistCalendarEvents(context);
             }
             catch (Exception e)
             {
@@ -54,36 +38,15 @@ namespace daily_briefing_telegram_bot
             }
         }
 
-        [FunctionName("PersistEventsHttp")]
-        public async Task PersistEventsHttp(
+        [FunctionName("PersistCalendarEventsHttp")]
+        public async Task PersistCalendarEventsHttp(
             [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)]
             HttpRequest req, ExecutionContext context,
             ILogger log)
         {
             try
             {
-                var events = await _googleCalendarService.GetEvents(context);
-                var savedEvents = _eventRepository.LoadAll();
-
-                if (events.Items is {Count: > 0})
-                    foreach (var item in events.Items)
-                    {
-                        var googleEvent = new GoogleEvent(item);
-
-                        if (!googleEvent.HappenedToday()) continue;
-
-                        var @event = savedEvents.SingleOrDefault(e => e.Id == item.Id);
-
-                        if (@event == null)
-                        {
-                            await _eventRepository.Upsert(new Event(googleEvent));
-                        }
-                        else if (!@event.OccuredOn(googleEvent.StartDate))
-                        {
-                            @event.UpdateEvent(googleEvent);
-                            await _eventRepository.Upsert(@event);
-                        }
-                    }
+                await _functionHelperService.PersistCalendarEvents(context);
             }
             catch (Exception e)
             {
@@ -100,16 +63,7 @@ namespace daily_briefing_telegram_bot
         {
             try
             {
-                var events = _eventRepository.LoadAll();
-
-                foreach (var @event in events)
-                    if (@event.Action == Action.Warning)
-                    {
-                        await _telegramService.SendMessage(@event.Summary);
-
-                        @event.ResetAction();
-                        await _eventRepository.Upsert(@event);
-                    }
+                await _functionHelperService.SendWarnings();
             }
             catch (Exception e)
             {
@@ -125,16 +79,7 @@ namespace daily_briefing_telegram_bot
         {
             try
             {
-                var events = _eventRepository.LoadAll();
-
-                foreach (var @event in events)
-                    if (@event.Action == Action.Warning)
-                    {
-                        await _telegramService.SendMessage(@event.Summary);
-
-                        @event.ResetAction();
-                        await _eventRepository.Upsert(@event);
-                    }
+                await _functionHelperService.SendWarnings();
             }
             catch (Exception e)
             {
@@ -151,18 +96,7 @@ namespace daily_briefing_telegram_bot
         {
             try
             {
-                var events = _eventRepository.LoadAll();
-
-                foreach (var @event in events)
-                    if (@event.Action == Action.Delete && !@event.IsDeleted)
-                    {
-                        await _googleCalendarService.DeleteEvent(context, @event.Id);
-
-                        @event.ResetAction();
-                        @event.Delete();
-
-                        await _eventRepository.Upsert(@event);
-                    }
+                await _functionHelperService.DeleteGoogleEvents(context);
             }
             catch (Exception e)
             {
@@ -178,18 +112,7 @@ namespace daily_briefing_telegram_bot
         {
             try
             {
-                var events = _eventRepository.LoadAll();
-
-                foreach (var @event in events)
-                    if (@event.Action == Action.Delete && !@event.IsDeleted)
-                    {
-                        await _googleCalendarService.DeleteEvent(context, @event.Id);
-
-                        @event.ResetAction();
-                        @event.Delete();
-                        
-                        await _eventRepository.Upsert(@event);
-                    }
+                await _functionHelperService.DeleteGoogleEvents(context);
             }
             catch (Exception e)
             {
