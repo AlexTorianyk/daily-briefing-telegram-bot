@@ -68,7 +68,7 @@ namespace daily_briefing_telegram_bot.Services
             foreach (var @event in events)
                 if (@event.Action == Action.Warning && @event.LastOccurence == DateTimeOffset.Now.Date)
                 {
-                    await _telegramService.SendMessage(@event.Summary);
+                    await _telegramService.SendMessage($"{@event.Summary} {@event.Occurences} times? Are you for real?");
                 }
         }
 
