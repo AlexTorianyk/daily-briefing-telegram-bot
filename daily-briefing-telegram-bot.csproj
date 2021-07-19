@@ -22,7 +22,7 @@
     <PackageReference Include="Microsoft.Azure.WebJobs.Extensions.Http" Version="3.0.2" />
     <PackageReference Include="Microsoft.NET.Sdk.Functions" Version="3.0.12" />
     <PackageReference Include="Scrutor" Version="3.3.0" />
-    <PackageReference Include="Telegram.Bot" Version="15.7.1" />
+    <PackageReference Include="Telegram.Bot" Version="16.0.2" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="elegant-theorem-280314-255c58220999.json">
