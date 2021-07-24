@@ -32,8 +32,6 @@ namespace daily_briefing_telegram_bot.Services
 
             try
             {
-
-           
                 if (events.Items is {Count: > 0})
                     foreach (var item in events.Items)
                     {

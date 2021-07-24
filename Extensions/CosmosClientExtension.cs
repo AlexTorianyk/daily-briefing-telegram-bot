@@ -23,7 +23,7 @@ namespace daily_briefing_telegram_bot.Extensions
                 var databaseResponse = await cosmosClient.CreateDatabaseIfNotExistsAsync(configuration
                     .GetValue<string>("DatabaseId"));
                 await databaseResponse.Database.CreateContainerIfNotExistsAsync(
-                    new ContainerProperties(configuration.GetValue<string>("EventContainer"), "/action"));
+                    new ContainerProperties(configuration.GetValue<string>("EventContainer"), "/id"));
             });
 
             task.Wait();
