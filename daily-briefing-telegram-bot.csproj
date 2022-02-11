@@ -15,7 +15,7 @@
     <PackageReference Include="Google.Apis.Calendar.v3" Version="1.55.0.2590" />
     <PackageReference Include="Microsoft.ApplicationInsights" Version="2.17.0" />
     <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.1.0" />
-    <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.19.0" />
+    <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.24.0" />
     <PackageReference Include="Microsoft.Azure.Functions.Extensions" Version="1.1.0" />
     <PackageReference Include="Microsoft.ApplicationInsights" Version="2.17.0" />
     <PackageReference Include="Microsoft.Azure.WebJobs.Extensions" Version="3.0.6" />
