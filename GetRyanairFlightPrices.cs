@@ -20,8 +20,8 @@ namespace daily_briefing_telegram_bot
       _telegramService = telegramService;
     }
 
-    [FunctionName("GetRyanairFlightPrices")]
-    public async Task Run(
+    [FunctionName("GetPortugalFlightPricesHttp")]
+    public async Task GetPortugalFlightPricesHttp(
         [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)]
             HttpRequest req, ExecutionContext context,
         ILogger log)
@@ -29,7 +29,26 @@ namespace daily_briefing_telegram_bot
       try
       {
         var flightPrices = await _flightService.GetFlightPrices("WRO", "OPO", "2023-07-21", "2023-07-24");
-        
+
+        await _telegramService.SendMessageToFlightBot(flightPrices.destination_to_origin_trip[0][0].ToString());
+        await _telegramService.SendMessageToFlightBot(flightPrices.origin_to_destination_trip[0][0].ToString());
+      }
+      catch (Exception e)
+      {
+        log.LogError(e, e.Message);
+        throw;
+      }
+    }
+
+    [FunctionName("GetPortugalFlightPricesScheduled")]
+    public async Task GetPortugalFlightPricesScheduled(
+            [TimerTrigger("0 30 21 * * *")] TimerInfo myTimer, ExecutionContext context,
+            ILogger log)
+    {
+      try
+      {
+        var flightPrices = await _flightService.GetFlightPrices("WRO", "OPO", "2023-07-21", "2023-07-24");
+
         await _telegramService.SendMessageToFlightBot(flightPrices.destination_to_origin_trip[0][0].ToString());
         await _telegramService.SendMessageToFlightBot(flightPrices.origin_to_destination_trip[0][0].ToString());
       }
