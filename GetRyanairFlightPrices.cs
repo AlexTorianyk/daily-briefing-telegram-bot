@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using daily_briefing_telegram_bot.Services;
+using daily_briefing_telegram_bot.Services.Telegram;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
@@ -11,9 +12,12 @@ namespace daily_briefing_telegram_bot
   public class GetRyanairFlightPrices
   {
     private readonly FlightService _flightService;
-    public GetRyanairFlightPrices(FlightService flightService)
+    private readonly ITelegramService _telegramService;
+
+    public GetRyanairFlightPrices(FlightService flightService, ITelegramService telegramService)
     {
       _flightService = flightService;
+      _telegramService = telegramService;
     }
 
     [FunctionName("GetRyanairFlightPrices")]
@@ -25,8 +29,9 @@ namespace daily_briefing_telegram_bot
       try
       {
         var flightPrices = await _flightService.GetFlightPrices();
-        log.LogInformation(flightPrices.destination_to_origin_trip[0][0].ToString());
-        log.LogInformation(flightPrices.origin_to_destination_trip[0][0].ToString());
+        
+        await _telegramService.SendMessageToFlightBot(flightPrices.destination_to_origin_trip[0][0].ToString());
+        await _telegramService.SendMessageToFlightBot(flightPrices.origin_to_destination_trip[0][0].ToString());
       }
       catch (Exception e)
       {
