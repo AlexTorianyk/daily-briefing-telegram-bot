@@ -3,11 +3,19 @@ using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
 using daily_briefing_telegram_bot.Extensions.AutomaticDependencyInjection;
+using Microsoft.Extensions.Configuration;
 
 namespace daily_briefing_telegram_bot.Services
 {
   public class FlightService : ITransient
   {
+    private readonly string _apiKey;
+
+    public FlightService(IConfiguration configuration)
+    {
+      _apiKey = configuration.GetSection("Ryanair").GetValue<string>("APIKey");
+    }
+
     public async Task<FlightResponse> GetFlightPrices()
     {
       var client = new HttpClient();
@@ -18,7 +26,7 @@ namespace daily_briefing_telegram_bot.Services
         RequestUri = new Uri("https://ryanair.p.rapidapi.com/flights?origin_code=WRO&destination_code=OPO&origin_departure_date=2023-07-21&destination_departure_date=2023-07-24"),
         Headers =
           {
-            { "X-RapidAPI-Key", "452701a3e8msh443726bbff07365p1de7cbjsn47d02bbd3cfe" },
+            { "X-RapidAPI-Key", _apiKey },
             { "X-RapidAPI-Host", "ryanair.p.rapidapi.com" },
           },
       };
