@@ -16,14 +16,14 @@ namespace daily_briefing_telegram_bot.Services
       _apiKey = configuration.GetSection("Ryanair").GetValue<string>("APIKey");
     }
 
-    public async Task<FlightResponse> GetFlightPrices()
+    public async Task<FlightResponse> GetFlightPrices(string originCode, string destinationCode, string originDepartureDate, string destinationDepartureDate)
     {
       var client = new HttpClient();
       
       var request = new HttpRequestMessage
       {
         Method = HttpMethod.Get,
-        RequestUri = new Uri("https://ryanair.p.rapidapi.com/flights?origin_code=WRO&destination_code=OPO&origin_departure_date=2023-07-21&destination_departure_date=2023-07-24"),
+        RequestUri = new Uri($"https://ryanair.p.rapidapi.com/flights?origin_code={originCode}&destination_code={destinationCode}&origin_departure_date={originDepartureDate}&destination_departure_date={destinationDepartureDate}"),
         Headers =
           {
             { "X-RapidAPI-Key", _apiKey },

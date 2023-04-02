@@ -28,7 +28,7 @@ namespace daily_briefing_telegram_bot
     {
       try
       {
-        var flightPrices = await _flightService.GetFlightPrices();
+        var flightPrices = await _flightService.GetFlightPrices("WRO", "OPO", "2023-07-21", "2023-07-24");
         
         await _telegramService.SendMessageToFlightBot(flightPrices.destination_to_origin_trip[0][0].ToString());
         await _telegramService.SendMessageToFlightBot(flightPrices.origin_to_destination_trip[0][0].ToString());
