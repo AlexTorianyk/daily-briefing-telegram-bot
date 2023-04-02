@@ -10,6 +10,10 @@
   },
   "Telegram": {
     "ChatId": 123456789,
-    "BotToken": "<bot-token>"
+    "CalendarBotToken": "<calendar-bot-token>",
+    "FlightsBotToken": "<flights-bot-token>"
+  },
+  "Ryanair": {
+    "APIKey": "<rapid-api-key>"
   }
 }

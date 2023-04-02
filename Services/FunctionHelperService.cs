@@ -66,7 +66,7 @@ namespace daily_briefing_telegram_bot.Services
             foreach (var @event in events)
                 if (@event.Action == Action.Warning && @event.LastOccurence == DateTimeOffset.Now.Date)
                 {
-                    await _telegramService.SendMessage($"{@event.Summary} {@event.Occurences} times? Are you for real?");
+                    await _telegramService.SendMessageToCalendarBot($"{@event.Summary} {@event.Occurences} times? Are you for real?");
                 }
         }
 
@@ -77,7 +77,7 @@ namespace daily_briefing_telegram_bot.Services
             foreach (var @event in events)
                 if (@event.Action == Action.Delete && !@event.IsDeleted)
                 {
-                    await _telegramService.SendMessage($"{@event.Summary} has been deleted");
+                    await _telegramService.SendMessageToCalendarBot($"{@event.Summary} has been deleted");
                     
                     await _googleCalendarService.DeleteEvent(context, @event.Id);
 
